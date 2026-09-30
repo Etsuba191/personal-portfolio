@@ -1,0 +1,1 @@
+ALTER TABLE "Certificate" ADD COLUMN "resourceType" VARCHAR(10) NOT NULL DEFAULT 'image';

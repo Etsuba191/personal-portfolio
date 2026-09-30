@@ -1,0 +1,1 @@
+ALTER TABLE "ProjectImage" ADD COLUMN "cloudinaryId" TEXT;

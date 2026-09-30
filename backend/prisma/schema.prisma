@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Review {
+  id        Int          @id @default(autoincrement())
+  name      String       @db.VarChar(100)
+  email     String       @db.VarChar(254)
+  role      String       @db.VarChar(120)
+  company   String?      @db.VarChar(160)
+  photoUrl  String?
+  rating    Int
+  comment   String       @db.VarChar(2000)
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model Project {
+  id               Int            @id @default(autoincrement())
+  title            String         @db.VarChar(160)
+  slug             String         @unique @db.VarChar(180)
+  category         String         @db.VarChar(120)
+  shortDescription String         @db.VarChar(500)
+  overview         String
+  problem          String
+  approach         String
+  solution         String
+  technologies     String[]
+  keyFeatures      String[]
+  result           String
+  reflection       String
+  projectType      String         @db.VarChar(120)
+  featured         Boolean        @default(false)
+  published        Boolean        @default(false)
+  githubUrl        String?
+  liveUrl          String?
+  videoUrl         String?
+  coverImage       String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  galleryImages    ProjectImage[]
+
+  @@index([published, featured])
+  @@index([published, updatedAt])
+}
+
+model ProjectImage {
+  id           Int      @id @default(autoincrement())
+  projectId    Int
+  url          String
+  alt          String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  cloudinaryId String?
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, sortOrder])
+}
+
+model AboutContent {
+  id                   Int      @id @default(1)
+  heading              String   @db.VarChar(160)
+  paragraphs           String[]
+  updatedAt            DateTime @updatedAt
+  profileImage         String?
+  profileImagePublicId String?
+  services             Json?
+}
+
+model SkillGroup {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(100)
+  skills    String[]
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model Experience {
+  id           Int      @id @default(autoincrement())
+  organization String   @db.VarChar(160)
+  role         String   @db.VarChar(160)
+  division     String?
+  startDate    String   @db.VarChar(40)
+  endDate      String   @db.VarChar(40)
+  description  String?
+  sortOrder    Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model CvDocument {
+  id        Int      @id @default(autoincrement())
+  url       String
+  publicId  String?
+  fileName  String   @db.VarChar(180)
+  active    Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+model Certificate {
+  id            Int      @id @default(autoincrement())
+  title         String   @db.VarChar(180)
+  issuer        String   @db.VarChar(160)
+  issueDate     String?  @db.VarChar(40)
+  credentialUrl String?
+  fileUrl       String
+  publicId      String?
+  fileName      String   @db.VarChar(180)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  resourceType  String   @default("image")
+
+  @@index([sortOrder, createdAt])
+}
+
+model Profile {
+  id                Int      @id @default(1)
+  name              String?
+  professionalTitle String?
+  shortIntroduction String?
+  location          String?
+  email             String?
+  phone             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Education {
+  id          Int      @id @default(autoincrement())
+  institution String   @db.VarChar(180)
+  degree      String   @db.VarChar(180)
+  startDate   String?  @db.VarChar(40)
+  endDate     String?  @db.VarChar(40)
+  description String?
+  sortOrder   Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model SocialLink {
+  id        Int      @id @default(autoincrement())
+  platform  String   @unique @db.VarChar(40)
+  label     String   @db.VarChar(80)
+  url       String   @db.VarChar(1000)
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model Audio {
+  id        Int      @id @default(autoincrement())
+  url       String   @db.VarChar(1000)
+  publicId  String?  @db.VarChar(180)
+  fileName  String   @db.VarChar(180)
+  enabled   Boolean  @default(true)
+  loop      Boolean  @default(true)
+  volume    Float    @default(0.5)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([enabled, sortOrder])
+}
+
+model Tool {
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(100)
+  iconUrl      String?  @db.VarChar(1000)
+  iconPublicId String?  @db.VarChar(180)
+  category     String?  @db.VarChar(60)
+  enabled      Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  skillGroupId Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([enabled, sortOrder])
+  @@index([skillGroupId])
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
