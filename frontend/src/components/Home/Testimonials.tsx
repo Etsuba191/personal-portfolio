@@ -73,7 +73,7 @@ const Testimonials = () => {
       {loading && <p className="review-state">Loading testimonials...</p>}
       {!loading && loadError && <p className="form-error review-state" role="alert">{loadError}</p>}
       {!loading && !loadError && reviews.length === 0 && (
-        <div className="testimonials-grid"><article className="testimonial-card collaboration-card"><span className="quote-mark">“</span><p className="testimonial-quote">Every project has taught me something new, from working with spatial data and maps to designing full-stack applications.</p><div className="testimonial-author"><strong>Learning · Building · Improving</strong><span>More teammate perspectives coming soon</span></div></article></div>
+        <div className="testimonials-grid"><article className="testimonial-card collaboration-card"><span className="quote-mark">“</span><p className="testimonial-quote">Every project has taught me something new, from working with spatial data and maps to designing full-stack applications.</p><div className="testimonial-author"><strong>Learning · Building · Improving</strong></div></article></div>
       )}
       {!loading && reviews.length > 0 && (
         <div className="testimonials-grid">

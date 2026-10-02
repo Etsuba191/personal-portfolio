@@ -110,8 +110,8 @@ const projectValues = (input: ProjectInput) => [
 
 export const createCmsProject = async (input: ProjectInput) => {
   const result = await database.query(
-    `INSERT INTO "Project" ("title", "slug", "category", "shortDescription", "overview", "problem", "approach", "solution", "technologies", "keyFeatures", "result", "reflection", "projectType", "featured", "published", "githubUrl", "liveUrl", "videoUrl", "coverImage")
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+    `INSERT INTO "Project" ("title", "slug", "category", "shortDescription", "overview", "problem", "approach", "solution", "technologies", "keyFeatures", "result", "reflection", "projectType", "featured", "published", "githubUrl", "liveUrl", "videoUrl", "coverImage", "createdAt", "updatedAt")
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING ${projectReturningColumns}`,
     projectValues(input),
   )
@@ -127,7 +127,7 @@ export const updateCmsProject = async (id: number, input: ProjectInput) => {
 }
 
 export const setProjectPublished = async (id: number, published: boolean) => {
-  const result = await database.query(`UPDATE "Project" SET "published" = $1, "updatedAt" = CURRENT_TIMESTAMP WHERE "id" = $2 RETURNING ${projectColumns}`, [published, id])
+  const result = await database.query(`UPDATE "Project" SET "published" = $1, "updatedAt" = CURRENT_TIMESTAMP WHERE "id" = $2 RETURNING ${projectReturningColumns}`, [published, id])
   return result.rows[0] ? withGallery(mapProject(result.rows[0])) : null
 }
 

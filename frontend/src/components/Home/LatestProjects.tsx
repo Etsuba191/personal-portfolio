@@ -15,12 +15,13 @@ const LatestProjects = () => {
       .finally(() => setLoading(false))
   }, [])
 
+  if (!loading && !error && projects.length === 0) return null
+
   return (
     <section className="projects-section" id="work">
       <div className="section-header"><p className="section-label">SELECTED WORK</p><h2>Latest <span>projects.</span></h2></div>
       {loading && <p className="review-state">Loading projects...</p>}
       {error && <p className="form-error review-state" role="alert">{error}</p>}
-      {!loading && !error && projects.length === 0 && <p className="review-state">No published projects yet.</p>}
       {!loading && !error && projects.length > 0 && (
         <div className="projects-grid">
           {projects.map((project) => (

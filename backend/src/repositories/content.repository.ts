@@ -176,8 +176,8 @@ export const findSocialLinks = async (): Promise<SocialLink[]> => {
 
 export const createSocialLink = async (input: SocialLinkInput) => {
   const result = await database.query(
-    `INSERT INTO "SocialLink" ("platform", "label", "url", "sortOrder")
-     VALUES ($1, $2, $3, COALESCE($4, (SELECT COALESCE(MAX("sortOrder"), -1) + 1 FROM "SocialLink")))
+    `INSERT INTO "SocialLink" ("platform", "label", "url", "sortOrder", "updatedAt")
+     VALUES ($1, $2, $3, COALESCE($4, (SELECT COALESCE(MAX("sortOrder"), -1) + 1 FROM "SocialLink")), CURRENT_TIMESTAMP)
      RETURNING "id", "platform", "label", "url", "sortOrder", "updatedAt"`,
     [input.platform, input.label, input.url, input.sortOrder ?? null],
   )
@@ -279,8 +279,8 @@ export const findSkillGroups = async (): Promise<SkillGroup[]> => {
 
 export const createSkillGroup = async (input: SkillGroupInput) => {
   const result = await database.query(
-    `INSERT INTO "SkillGroup" ("title", "skills", "sortOrder")
-     VALUES ($1, $2, COALESCE($3, (SELECT COALESCE(MAX("sortOrder"), -1) + 1 FROM "SkillGroup")))
+    `INSERT INTO "SkillGroup" ("title", "skills", "sortOrder", "updatedAt")
+     VALUES ($1, $2, COALESCE($3, (SELECT COALESCE(MAX("sortOrder"), -1) + 1 FROM "SkillGroup")), CURRENT_TIMESTAMP)
      RETURNING "id", "title", "skills", "sortOrder", "updatedAt"`,
     [input.title, input.skills, input.sortOrder ?? null],
   )
@@ -435,8 +435,8 @@ export const findCertificateDetails = async (id: number): Promise<Certificate & 
 
 export const createCertificate = async (input: CertificateInput) => {
   const result = await database.query(
-    `INSERT INTO "Certificate" ("title", "issuer", "issueDate", "credentialUrl", "fileUrl", "publicId", "resourceType", "fileName", "sortOrder")
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE((SELECT MAX("sortOrder") + 1 FROM "Certificate"), 0))
+    `INSERT INTO "Certificate" ("title", "issuer", "issueDate", "credentialUrl", "fileUrl", "publicId", "resourceType", "fileName", "sortOrder", "updatedAt")
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE((SELECT MAX("sortOrder") + 1 FROM "Certificate"), 0), CURRENT_TIMESTAMP)
      RETURNING "id", "title", "issuer", "issueDate", "credentialUrl", "fileUrl", "fileName", "sortOrder"`,
     [input.title, input.issuer, input.issueDate, input.credentialUrl, input.fileUrl, input.publicId, input.resourceType, input.fileName],
   )
@@ -505,7 +505,7 @@ export const replaceSkillGroups = async (groups: SkillGroupInput[]) => {
     await client.query('BEGIN')
     await client.query('DELETE FROM "SkillGroup"')
     for (const [sortOrder, group] of groups.entries())
-      await client.query('INSERT INTO "SkillGroup" ("title", "skills", "sortOrder") VALUES ($1, $2, $3)', [group.title, group.skills, sortOrder])
+      await client.query('INSERT INTO "SkillGroup" ("title", "skills", "sortOrder", "updatedAt") VALUES ($1, $2, $3, CURRENT_TIMESTAMP)', [group.title, group.skills, sortOrder])
     await client.query('COMMIT')
   } catch (error) {
     await client.query('ROLLBACK')
@@ -522,7 +522,7 @@ export const replaceExperiences = async (items: ExperienceInput[]) => {
     await client.query('DELETE FROM "Experience"')
     for (const [sortOrder, item] of items.entries())
       await client.query(
-        'INSERT INTO "Experience" ("organization", "role", "division", "startDate", "endDate", "description", "sortOrder") VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        'INSERT INTO "Experience" ("organization", "role", "division", "startDate", "endDate", "description", "sortOrder", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)',
         [item.organization, item.role, item.division, item.startDate, item.endDate, item.description, item.sortOrder ?? sortOrder],
       )
     await client.query('COMMIT')
@@ -537,7 +537,7 @@ export const replaceExperiences = async (items: ExperienceInput[]) => {
 export const saveActiveCv = async (url: string, publicId: string, fileName: string) => {
   await database.query('UPDATE "CvDocument" SET "active" = false WHERE "active" = true')
   const result = await database.query(
-    'INSERT INTO "CvDocument" ("url", "publicId", "fileName", "active") VALUES ($1, $2, $3, true) RETURNING "url", "fileName", "updatedAt"',
+    'INSERT INTO "CvDocument" ("url", "publicId", "fileName", "active", "updatedAt") VALUES ($1, $2, $3, true, CURRENT_TIMESTAMP) RETURNING "url", "fileName", "updatedAt"',
     [url, publicId, fileName],
   )
   return result.rows[0]
@@ -578,8 +578,8 @@ export const findAudioDetails = async (id: number): Promise<Audio | null> => {
 
 export const createAudio = async (input: CreateAudioInput) => {
   const result = await database.query(
-    `INSERT INTO "Audio" ("url", "publicId", "fileName", "enabled", "loop", "volume", "sortOrder")
-     VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, (SELECT COALESCE(MAX("sortOrder"), -1) + 1 FROM "Audio")))
+    `INSERT INTO "Audio" ("url", "publicId", "fileName", "enabled", "loop", "volume", "sortOrder", "updatedAt")
+     VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, (SELECT COALESCE(MAX("sortOrder"), -1) + 1 FROM "Audio")), CURRENT_TIMESTAMP)
      RETURNING "id", "url", "publicId", "fileName", "enabled", "loop", "volume", "sortOrder", "createdAt", "updatedAt"`,
     [input.url, input.publicId, input.fileName, input.enabled, input.loop, input.volume, input.sortOrder ?? null],
   )
@@ -650,8 +650,8 @@ export const findTool = async (id: number): Promise<Tool | null> => {
 
 export const createTool = async (input: CreateToolInput) => {
   const result = await database.query(
-    `INSERT INTO "Tool" ("name", "iconUrl", "iconPublicId", "category", "enabled", "sortOrder", "skillGroupId")
-     VALUES ($1, $2, $3, $4, $5, COALESCE($6, (SELECT COALESCE(MAX("sortOrder"), -1) + 1 FROM "Tool")), $7)
+    `INSERT INTO "Tool" ("name", "iconUrl", "iconPublicId", "category", "enabled", "sortOrder", "skillGroupId", "updatedAt")
+     VALUES ($1, $2, $3, $4, $5, COALESCE($6, (SELECT COALESCE(MAX("sortOrder"), -1) + 1 FROM "Tool")), $7, CURRENT_TIMESTAMP)
      RETURNING "id", "name", "iconUrl", "iconPublicId", "category", "enabled", "sortOrder", "skillGroupId", "createdAt", "updatedAt"`,
     [input.name, input.iconUrl ?? null, input.iconPublicId ?? null, input.category ?? null, input.enabled, input.sortOrder ?? null, input.skillGroupId ?? null],
   )

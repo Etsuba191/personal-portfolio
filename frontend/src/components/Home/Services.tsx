@@ -15,6 +15,8 @@ const Services = () => {
       .finally(() => setLoading(false))
   }, [])
 
+  if (!loading && !error && services.length === 0) return null
+
   return (
     <section className="services-section" id="services">
       <div className="section-header">
@@ -23,7 +25,6 @@ const Services = () => {
       </div>
       {loading && <p className="review-state">Loading services...</p>}
       {error && <p className="form-error review-state" role="alert">{error}</p>}
-      {!loading && !error && services.length === 0 && <p className="review-state">Services will be added soon.</p>}
       {!loading && !error && services.length > 0 && (
         <div className="services-grid">
           {services.map((service) => (

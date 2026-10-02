@@ -8,6 +8,7 @@ const primaryLinks: NavItem[] = [
   { label: 'WORK', href: '#work', section: 'work' },
   { label: 'ABOUT', href: '#about', section: 'about' },
   { label: 'EXPERIENCE', href: '#experience', section: 'experience' },
+  { label: 'EDUCATION', href: '#education', section: 'education' },
   { label: 'SKILLS', href: '#skills', section: 'skills' },
   { label: 'CONTACT', href: '#contact', section: 'contact' },
 ]

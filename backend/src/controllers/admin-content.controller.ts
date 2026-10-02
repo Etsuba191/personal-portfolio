@@ -70,15 +70,17 @@ const respondNotFound = (res: Response, resource: string) => res.status(404).jso
 const respondInvalid = (res: Response, message: string) => res.status(400).json({ success: false, message })
 
 export const getAdminContent = async (_req: Request, res: Response) => {
-  try {
-    const [about, profile, socialLinks, skills, experience, education, certificates] = await Promise.all([
-      findAboutContent(), findProfile(), findSocialLinks(), findSkillGroups(), findExperiences(), findEducation(), findCertificates(),
-    ])
-    res.json({ success: true, data: { about, profile, socialLinks, skills, experience, education, certificates } })
-  } catch (error) {
-    console.error('Admin content lookup failed', error)
-    res.status(503).json({ success: false, message: 'Portfolio content is temporarily unavailable.' })
-  }
+  const entries = await Promise.allSettled([
+    findAboutContent(), findProfile(), findSocialLinks(), findSkillGroups(), findExperiences(), findEducation(), findCertificates(),
+  ])
+  const names = ['about', 'profile', 'socialLinks', 'skills', 'experience', 'education', 'certificates'] as const
+  const data: Record<string, unknown> = {}
+  const errors: Record<string, string> = {}
+  entries.forEach((entry, index) => {
+    if (entry.status === 'fulfilled') data[names[index]] = entry.value
+    else { console.error(`Admin ${names[index]} lookup failed`, entry.reason); data[names[index]] = null; errors[names[index]] = 'Temporarily unavailable.' }
+  })
+  res.json({ success: Object.keys(errors).length === 0, data, ...(Object.keys(errors).length > 0 ? { errors } : {}) })
 }
 
 export const saveAdminContent = async (req: Request, res: Response) => {

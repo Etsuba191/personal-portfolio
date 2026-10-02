@@ -54,9 +54,17 @@ const AdminEducation = () => {
     if (!form.institution || !form.degree) { setError('Institution and degree are required.'); return }
     setSaving(true); setMessage(''); setError('')
     try {
-      if (editingId) { await updateAdminEducation(editingId, form); setMessage('Education updated.') }
-      else { const created = await createAdminEducation(form); setItems((current) => [...current, created]); setMessage('Education created.') }
-      reset()
+      if (editingId) {
+        const updated = await updateAdminEducation(editingId, form)
+        setItems((current) => current.map((item) => item.id === editingId ? updated : item))
+        reset()
+        setMessage('Education updated.')
+      } else {
+        const created = await createAdminEducation(form)
+        setItems((current) => [...current, created])
+        reset()
+        setMessage('Education created.')
+      }
     } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to save education.') } finally { setSaving(false) }
   }
 

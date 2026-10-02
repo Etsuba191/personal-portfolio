@@ -54,9 +54,17 @@ const AdminSkills = () => {
     if (!form.title) { setError('Skill group title is required.'); return }
     setSaving(true); setMessage(''); setError('')
     try {
-      if (editingId) { await updateAdminSkill(editingId, form); setMessage('Skill group updated.') }
-      else { const created = await createAdminSkill(form); setGroups((current) => [...current, created]); setMessage('Skill group created.') }
-      reset()
+      if (editingId) {
+        const updated = await updateAdminSkill(editingId, form)
+        setGroups((current) => current.map((group) => group.id === editingId ? updated : group))
+        reset()
+        setMessage('Skill group updated.')
+      } else {
+        const created = await createAdminSkill(form)
+        setGroups((current) => [...current, created])
+        reset()
+        setMessage('Skill group created.')
+      }
     } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to save skills.') } finally { setSaving(false) }
   }
 

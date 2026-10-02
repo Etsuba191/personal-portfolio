@@ -28,8 +28,8 @@ export const findAllReviews = async () => {
 
 export const createReview = async (input: ReviewInput, photoUrl: string | null) => {
   const result = await database.query(
-    `INSERT INTO "Review" ("name", "email", "role", "company", "photoUrl", "rating", "comment")
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO "Review" ("name", "email", "role", "company", "photoUrl", "rating", "comment", "updatedAt")
+     VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
      RETURNING ${reviewColumns}`,
     [input.name, input.email, input.role, input.company || null, photoUrl, input.rating, input.comment],
   )

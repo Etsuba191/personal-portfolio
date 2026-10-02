@@ -1,12 +1,9 @@
 import type { Project } from '../types/project'
 import { getPortfolioProject, portfolioProjects, type PortfolioProject } from '../data/portfolioProjects'
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'
+import { apiRequest } from './request'
 
 export const getProjects = async (): Promise<Project[]> => {
-  const response = await fetch(`${API_URL}/projects`)
-  if (!response.ok) throw new Error('Failed to fetch projects')
-  const result = await response.json()
+  const result = await apiRequest<{ data: Project[] }>('/projects')
   return result.data
 }
 
@@ -46,22 +43,27 @@ const toPortfolioProject = (project: CmsProject): PortfolioProject => ({
 
 export const getPublishedPortfolioProjects = async (): Promise<PortfolioProject[]> => {
   try {
-    const response = await fetch(`${API_URL}/projects/published`)
-    const result = await response.json()
-    if (!response.ok) throw new Error(result.message ?? 'Failed to fetch published projects.')
-    if (!Array.isArray(result.data) || result.data.length === 0) return portfolioProjects
-    return result.data.map(toPortfolioProject)
+    const result = await apiRequest<{ data: CmsProject[] }>('/projects/published')
+    if (!Array.isArray(result.data) || result.data.length === 0) {
+      return portfolioProjects.map((project, index) => ({ ...project, number: String(index + 1).padStart(2, '0') }))
+    }
+    const cmsProjects = result.data.map(toPortfolioProject)
+    const cmsSlugs = new Set(cmsProjects.map((project) => project.slug))
+    return [...cmsProjects, ...portfolioProjects.filter((project) => !cmsSlugs.has(project.slug))]
+      .map((project, index) => ({ ...project, number: String(index + 1).padStart(2, '0') }))
   } catch {
-    return portfolioProjects
+    return portfolioProjects.map((project, index) => ({ ...project, number: String(index + 1).padStart(2, '0') }))
   }
 }
 
 export const getPublishedPortfolioProject = async (slug: string): Promise<PortfolioProject> => {
   try {
-    const response = await fetch(`${API_URL}/projects/published/${encodeURIComponent(slug)}`)
-    const result = await response.json()
-    if (!response.ok) throw new Error(result.message ?? 'Failed to fetch project.')
-    if (result.data) return toPortfolioProject(result.data)
+    const result = await apiRequest<{ data: CmsProject | null }>(`/projects/published/${encodeURIComponent(slug)}`)
+    if (result.data) {
+      const project = toPortfolioProject(result.data)
+      const orderedProject = (await getPublishedPortfolioProjects()).find((item) => item.slug === project.slug)
+      return orderedProject ?? project
+    }
   } catch {
     // Fall through to the local migration snapshot.
   }

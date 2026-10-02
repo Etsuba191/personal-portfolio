@@ -114,8 +114,8 @@ const AdminProjects = () => {
     try {
       if (editingId) await updateAdminProject(editingId, form)
       else await createAdminProject(form)
-      setMessage(editingId ? 'Project updated.' : 'Project draft created.')
       resetForm()
+      setMessage(editingId ? 'Project updated.' : 'Project draft created.')
       await loadProjects()
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Unable to save project.')

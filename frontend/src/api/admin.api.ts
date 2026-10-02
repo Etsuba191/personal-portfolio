@@ -1,3 +1,5 @@
+import { apiRequest } from './request'
+
 export type AdminReview = {
   id: number
   name: string
@@ -49,30 +51,27 @@ export type CertificateInput = { id?: number; title: string; issuer: string; iss
 export type AudioInput = { id?: number; url?: string; publicId?: string | null; fileName?: string; enabled?: boolean; loop?: boolean; volume?: number; sortOrder?: number }
 export type ToolInput = { id?: number; name: string; iconUrl?: string | null; iconPublicId?: string | null; category?: string | null; enabled?: boolean; sortOrder?: number; skillGroupId?: number | null }
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'
+type ApiResponse<T> = { data: T }
 
-const request = async (path: string, options?: RequestInit) => {
-  const response = await fetch(`${API_URL}${path}`, { ...options, credentials: 'include' })
-  const result = response.status === 204 ? null : await response.json().catch(() => null)
-  if (!response.ok) throw new Error(result?.message ?? 'Admin request failed.')
-  return result
+const request = async <T = unknown>(path: string, options?: RequestInit): Promise<ApiResponse<T>> => {
+  return apiRequest<ApiResponse<T>>(path, options, true)
 }
 
 export const loginAdmin = (email: string, password: string) => request('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
 export const logoutAdmin = () => request('/auth/logout', { method: 'POST' })
 export const getAdminSession = () => request('/auth/session')
 
-export const getAdminReviews = async (): Promise<AdminReview[]> => (await request('/reviews/admin')).data
+export const getAdminReviews = async (): Promise<AdminReview[]> => (await request<AdminReview[]>('/reviews/admin')).data
 export const updateReviewStatus = (id: number, status: 'approve' | 'reject') => request(`/reviews/${id}/${status}`, { method: 'PATCH' })
-export const updateAdminReview = (id: number, review: Omit<AdminReview, 'id' | 'createdAt' | 'updatedAt' | 'photoUrl'>) => request(`/reviews/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(review) })
+export const updateAdminReview = (id: number, review: Omit<AdminReview, 'id' | 'createdAt' | 'updatedAt' | 'photoUrl'>) => request<AdminReview>(`/reviews/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(review) })
 export const deleteReview = (id: number) => request(`/reviews/${id}`, { method: 'DELETE' })
 
-export const getAdminProjects = async (): Promise<CmsProject[]> => (await request('/admin/projects')).data
+export const getAdminProjects = async (): Promise<CmsProject[]> => (await request<CmsProject[]>('/admin/projects')).data
 export const createAdminProject = (project: CmsProjectInput) => request('/admin/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(project) })
 export const updateAdminProject = (id: number, project: CmsProjectInput) => request(`/admin/projects/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(project) })
 export const updateAdminProjectPublication = (id: number, published: boolean) => request(`/admin/projects/${id}/publication`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ published }) })
 export const deleteAdminProject = (id: number) => request(`/admin/projects/${id}`, { method: 'DELETE' })
-export const uploadAdminProjectImage = async (projectId: number, file: File, alt: string) => { const body = new FormData(); body.append('image', file); body.append('alt', alt); return (await request(`/admin/projects/${projectId}/images`, { method: 'POST', body })).data }
+export const uploadAdminProjectImage = async (projectId: number, file: File, alt: string) => { const body = new FormData(); body.append('image', file); body.append('alt', alt); return (await request<CmsProject['galleryImages'][number]>(`/admin/projects/${projectId}/images`, { method: 'POST', body })).data }
 export const deleteAdminProjectImage = (projectId: number, imageId: number) => request(`/admin/projects/${projectId}/images/${imageId}`, { method: 'DELETE' })
 export const reorderAdminProjectImages = (projectId: number, imageIds: number[]) => request(`/admin/projects/${projectId}/images/reorder`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageIds }) })
 
@@ -86,42 +85,42 @@ export type AdminContent = {
   certificates: CertificateInput[]
 }
 
-export const getAdminContent = async (): Promise<AdminContent> => (await request('/admin/content')).data
+export const getAdminContent = async (): Promise<AdminContent> => (await request<AdminContent>('/admin/content')).data
 export const saveAdminContent = (content: { about: { heading: string; paragraphs: string[] }; skills: SkillGroupInput[]; experience: ExperienceInput[]; services: ServiceInput[] }) => request('/admin/content', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(content) })
-export const getAdminProfile = async () => (await request('/admin/content/profile')).data
+export const getAdminProfile = async () => (await request<AdminContent['profile']>('/admin/content/profile')).data
 export const saveAdminProfile = (profile: { name?: string | null; professionalTitle?: string | null; shortIntroduction?: string | null; location?: string | null; email?: string | null; phone?: string | null }) => request('/admin/content/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) })
 export const saveAdminAbout = (about: { heading: string; paragraphs: string[] }) => request('/admin/content/about', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(about) })
-export const createAdminSocialLink = (link: SocialLinkInput) => request('/admin/content/social-links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(link) }).then(r => r.data)
-export const updateAdminSocialLink = (id: number, link: SocialLinkInput) => request(`/admin/content/social-links/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(link) }).then(r => r.data)
+export const createAdminSocialLink = (link: SocialLinkInput) => request<SocialLinkInput>('/admin/content/social-links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(link) }).then(r => r.data)
+export const updateAdminSocialLink = (id: number, link: SocialLinkInput) => request<SocialLinkInput>(`/admin/content/social-links/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(link) }).then(r => r.data)
 export const reorderAdminSocialLinks = (ids: number[]) => request('/admin/content/social-links/reorder', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
 export const deleteAdminSocialLink = (id: number) => request(`/admin/content/social-links/${id}`, { method: 'DELETE' })
-export const getAdminEducation = async (): Promise<EducationInput[]> => (await request('/admin/content/education')).data
-export const createAdminEducation = (entry: EducationInput) => request('/admin/content/education', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entry) }).then(r => r.data)
-export const updateAdminEducation = (id: number, entry: EducationInput) => request(`/admin/content/education/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entry) }).then(r => r.data)
+export const getAdminEducation = async (): Promise<EducationInput[]> => (await request<EducationInput[]>('/admin/content/education')).data
+export const createAdminEducation = (entry: EducationInput) => request<EducationInput>('/admin/content/education', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entry) }).then(r => r.data)
+export const updateAdminEducation = (id: number, entry: EducationInput) => request<EducationInput>(`/admin/content/education/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entry) }).then(r => r.data)
 export const reorderAdminEducation = (ids: number[]) => request('/admin/content/education/reorder', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
 export const deleteAdminEducation = (id: number) => request(`/admin/content/education/${id}`, { method: 'DELETE' })
-export const getAdminSkills = async (): Promise<SkillGroupInput[]> => (await request('/admin/content/skills')).data
-export const createAdminSkill = (group: SkillGroupInput) => request('/admin/content/skills', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(group) }).then(r => r.data)
-export const updateAdminSkill = (id: number, group: SkillGroupInput) => request(`/admin/content/skills/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(group) }).then(r => r.data)
+export const getAdminSkills = async (): Promise<SkillGroupInput[]> => (await request<SkillGroupInput[]>('/admin/content/skills')).data
+export const createAdminSkill = (group: SkillGroupInput) => request<SkillGroupInput>('/admin/content/skills', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(group) }).then(r => r.data)
+export const updateAdminSkill = (id: number, group: SkillGroupInput) => request<SkillGroupInput>(`/admin/content/skills/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(group) }).then(r => r.data)
 export const reorderAdminSkills = (ids: number[]) => request('/admin/content/skills/reorder', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
 export const deleteAdminSkill = (id: number) => request(`/admin/content/skills/${id}`, { method: 'DELETE' })
-export const getAdminExperience = async (): Promise<ExperienceInput[]> => (await request('/admin/content/experience')).data
-export const createAdminExperience = (item: ExperienceInput) => request('/admin/content/experience', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) }).then(r => r.data)
-export const updateAdminExperience = (id: number, item: ExperienceInput) => request(`/admin/content/experience/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) }).then(r => r.data)
+export const getAdminExperience = async (): Promise<ExperienceInput[]> => (await request<ExperienceInput[]>('/admin/content/experience')).data
+export const createAdminExperience = (item: ExperienceInput) => request<ExperienceInput>('/admin/content/experience', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) }).then(r => r.data)
+export const updateAdminExperience = (id: number, item: ExperienceInput) => request<ExperienceInput>(`/admin/content/experience/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) }).then(r => r.data)
 export const reorderAdminExperience = (ids: number[]) => request('/admin/content/experience/reorder', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
 export const deleteAdminExperience = (id: number) => request(`/admin/content/experience/${id}`, { method: 'DELETE' })
-export const getAdminServices = async (): Promise<ServiceInput[]> => (await request('/admin/content/services')).data
-export const saveAdminServices = (services: ServiceInput[]) => request('/admin/content/services', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ services }) }).then(r => r.data)
-export const getAdminCertificates = async (): Promise<CertificateInput[]> => (await request('/admin/content/certificates')).data
-export const createAdminCertificate = async (metadata: { title: string; issuer: string; issueDate: string; credentialUrl: string }, file: File) => { const body = new FormData(); body.append('title', metadata.title); body.append('issuer', metadata.issuer); body.append('issueDate', metadata.issueDate); body.append('credentialUrl', metadata.credentialUrl); body.append('certificate', file); return (await request('/admin/content/certificates', { method: 'POST', body })).data }
-export const updateAdminCertificate = (id: number, certificate: CertificateInput) => request(`/admin/content/certificates/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(certificate) })
-export const replaceAdminCertificateFile = async (id: number, file: File) => { const body = new FormData(); body.append('certificate', file); return (await request(`/admin/content/certificates/${id}/file`, { method: 'PATCH', body })).data }
+export const getAdminServices = async (): Promise<ServiceInput[]> => (await request<ServiceInput[]>('/admin/content/services')).data
+export const saveAdminServices = (services: ServiceInput[]) => request<ServiceInput[]>('/admin/content/services', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ services }) }).then(r => r.data)
+export const getAdminCertificates = async (): Promise<CertificateInput[]> => (await request<CertificateInput[]>('/admin/content/certificates')).data
+export const createAdminCertificate = async (metadata: { title: string; issuer: string; issueDate: string; credentialUrl: string }, file: File) => { const body = new FormData(); body.append('title', metadata.title); body.append('issuer', metadata.issuer); body.append('issueDate', metadata.issueDate); body.append('credentialUrl', metadata.credentialUrl); body.append('certificate', file); return (await request<CertificateInput>('/admin/content/certificates', { method: 'POST', body })).data }
+export const updateAdminCertificate = (id: number, certificate: CertificateInput) => request<CertificateInput>(`/admin/content/certificates/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(certificate) })
+export const replaceAdminCertificateFile = async (id: number, file: File) => { const body = new FormData(); body.append('certificate', file); return request<CertificateInput>(`/admin/content/certificates/${id}/file`, { method: 'PATCH', body }) }
 export const reorderAdminCertificates = (ids: number[]) => request('/admin/content/certificates/reorder', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
 export const deleteAdminCertificate = (id: number) => request(`/admin/content/certificates/${id}`, { method: 'DELETE' })
-export const uploadAdminCv = async (file: File) => { const body = new FormData(); body.append('cv', file); return (await request('/admin/content/cv', { method: 'POST', body })).data }
-export const uploadAdminProfileImage = async (file: File) => { const body = new FormData(); body.append('image', file); return (await request('/admin/content/profile-image', { method: 'POST', body })).data }
+export const uploadAdminCv = async (file: File) => { const body = new FormData(); body.append('cv', file); return (await request<{ url: string; fileName: string } >('/admin/content/cv', { method: 'POST', body })).data }
+export const uploadAdminProfileImage = async (file: File) => { const body = new FormData(); body.append('image', file); return (await request<{ profileImage: string }>('/admin/content/profile-image', { method: 'POST', body })).data }
 
-export const getAdminAudio = async (): Promise<AudioInput[]> => (await request('/admin/content/audio')).data
+export const getAdminAudio = async (): Promise<AudioInput[]> => (await request<AudioInput[]>('/admin/content/audio')).data
 export const createAdminAudio = async (file: File, metadata: { enabled?: boolean; loop?: boolean; volume?: number; sortOrder?: number }) => {
   const body = new FormData()
   body.append('audio', file)
@@ -129,7 +128,7 @@ export const createAdminAudio = async (file: File, metadata: { enabled?: boolean
   if (metadata.loop !== undefined) body.append('loop', String(metadata.loop))
   if (metadata.volume !== undefined) body.append('volume', String(metadata.volume))
   if (metadata.sortOrder !== undefined) body.append('sortOrder', String(metadata.sortOrder))
-  return (await request('/admin/content/audio', { method: 'POST', body })).data
+  return (await request<AudioInput>('/admin/content/audio', { method: 'POST', body })).data
 }
 export const updateAdminAudio = async (id: number, metadata: { enabled?: boolean; loop?: boolean; volume?: number; sortOrder?: number; fileName?: string }, file?: File) => {
   const body = new FormData()
@@ -139,11 +138,11 @@ export const updateAdminAudio = async (id: number, metadata: { enabled?: boolean
   if (metadata.volume !== undefined) body.append('volume', String(metadata.volume))
   if (metadata.sortOrder !== undefined) body.append('sortOrder', String(metadata.sortOrder))
   if (metadata.fileName !== undefined) body.append('fileName', metadata.fileName)
-  return (await request(`/admin/content/audio/${id}`, { method: 'PATCH', body })).data
+  return (await request<AudioInput>(`/admin/content/audio/${id}`, { method: 'PATCH', body })).data
 }
 export const deleteAdminAudio = (id: number) => request(`/admin/content/audio/${id}`, { method: 'DELETE' })
 
-export const getAdminTools = async (): Promise<ToolInput[]> => (await request('/admin/content/tools')).data
+export const getAdminTools = async (): Promise<ToolInput[]> => (await request<ToolInput[]>('/admin/content/tools')).data
 export const createAdminTool = async (tool: ToolInput, file?: File) => {
   const body = new FormData()
   body.append('name', tool.name)
@@ -154,7 +153,7 @@ export const createAdminTool = async (tool: ToolInput, file?: File) => {
   if (tool.sortOrder !== undefined) body.append('sortOrder', String(tool.sortOrder))
   if (tool.skillGroupId !== undefined && tool.skillGroupId !== null) body.append('skillGroupId', String(tool.skillGroupId))
   if (file) body.append('icon', file)
-  return (await request('/admin/content/tools', { method: 'POST', body })).data
+  return (await request<ToolInput>('/admin/content/tools', { method: 'POST', body })).data
 }
 export const updateAdminTool = async (id: number, tool: Partial<ToolInput>, file?: File) => {
   const body = new FormData()
@@ -166,7 +165,7 @@ export const updateAdminTool = async (id: number, tool: Partial<ToolInput>, file
   if (tool.sortOrder !== undefined) body.append('sortOrder', String(tool.sortOrder))
   if (tool.skillGroupId !== undefined && tool.skillGroupId !== null) body.append('skillGroupId', String(tool.skillGroupId))
   if (file) body.append('icon', file)
-  return (await request(`/admin/content/tools/${id}`, { method: 'PATCH', body })).data
+  return (await request<ToolInput>(`/admin/content/tools/${id}`, { method: 'PATCH', body })).data
 }
 export const reorderAdminTools = (ids: number[]) => request('/admin/content/tools/reorder', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
 export const deleteAdminTool = (id: number) => request(`/admin/content/tools/${id}`, { method: 'DELETE' })

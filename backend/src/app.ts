@@ -15,7 +15,7 @@ import { logger } from './middleware/logger.middleware'
 const app = express()
 
 const allowedOrigins = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL]
+	? process.env.FRONTEND_URL.split(',').map((origin) => origin.trim()).filter(Boolean)
   : ['http://localhost:5173']
 
 const cspDirectives = {
@@ -79,7 +79,7 @@ app.use('/api/health', healthRouter)
 app.use('/api/projects', projectRouter)
 app.use('/api/contact', submissionLimiter, contactRouter)
 app.use('/api/reviews', submissionLimiter, reviewRouter)
-app.use('/api/auth', loginLimiter, authRouter)
+app.use('/api/auth', authRouter)
 app.use('/api/admin/projects', uploadLimiter, adminProjectRouter)
 app.use('/api/content', contentRouter)
 app.use('/api/admin/content', uploadLimiter, adminContentRouter)

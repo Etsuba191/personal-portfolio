@@ -1,3 +1,5 @@
+import { apiRequest } from './request'
+
 export type PublicContent = {
   about: { heading: string; paragraphs: string[]; profileImage: string | null; services: Array<{ number: string; icon: string; title: string; description: string }> } | null
   profile: { id: number; name: string | null; professionalTitle: string | null; shortIntroduction: string | null; location: string | null; email: string | null; phone: string | null; createdAt: string; updatedAt: string } | null
@@ -11,11 +13,13 @@ export type PublicContent = {
   tools: Array<{ id: number; name: string; iconUrl: string | null; iconPublicId: string | null; category: string | null; enabled: boolean; sortOrder: number; skillGroupId: number | null; createdAt: string; updatedAt: string }>
 }
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'
+let pendingContentRequest: Promise<PublicContent> | null = null
 
-export const getPublicContent = async (): Promise<PublicContent> => {
-  const response = await fetch(`${API_URL}/content`)
-  const result = await response.json()
-  if (!response.ok) throw new Error(result.message ?? 'Failed to fetch portfolio content.')
-  return result.data
+export const getPublicContent = (): Promise<PublicContent> => {
+  if (!pendingContentRequest) {
+    pendingContentRequest = apiRequest<{ data: PublicContent; errors?: Record<string, string> }>('/content')
+      .then((result) => result.data)
+      .finally(() => { pendingContentRequest = null })
+  }
+  return pendingContentRequest
 }

@@ -1,3 +1,5 @@
+import { apiRequest } from './request'
+
 export type PublicReview = {
   id: number
   name: string
@@ -19,17 +21,8 @@ export type ReviewPayload = {
   photo?: File
 }
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'
-
 export const getApprovedReviews = async (): Promise<PublicReview[]> => {
-  const response = await fetch(`${API_URL}/reviews`)
-  const result = await response.json()
-
-  if (!response.ok) {
-    throw new Error(result.message ?? 'Unable to load testimonials.')
-  }
-
-  return result.data
+  return (await apiRequest<{ data: PublicReview[] }>('/reviews')).data
 }
 
 export const submitReview = async (payload: ReviewPayload) => {
@@ -42,15 +35,8 @@ export const submitReview = async (payload: ReviewPayload) => {
   formData.append('comment', payload.comment)
   if (payload.photo) formData.append('photo', payload.photo)
 
-  const response = await fetch(`${API_URL}/reviews`, {
+  return apiRequest('/reviews', {
     method: 'POST',
     body: formData,
   })
-  const result = await response.json()
-
-  if (!response.ok) {
-    throw new Error(result.message ?? 'Unable to submit your review.')
-  }
-
-  return result
 }

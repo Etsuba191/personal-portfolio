@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { getPublicContent } from '../../api/content.api'
+import { API_URL } from '../../api/request'
 
 const fallbackTechnologies = [
   { id: 0, name: 'React', symbol: 'R', className: 'tech-react', iconUrl: null },
@@ -60,7 +61,7 @@ const Hero = () => {
           </p>
           <div className="hero-actions">
             <a className="hero-primary-action" href="#work">View My Work <span aria-hidden="true">↗</span></a>
-            {cvUrl && <a className="hero-secondary-action" href={cvUrl} download>Download CV <span aria-hidden="true">↓</span></a>}
+            {cvUrl && <a className="hero-secondary-action" href={`${API_URL}/content/cv/download`} download>Download CV <span aria-hidden="true">↓</span></a>}
           </div>
           <div className="tech-stack">
             <p>TECHNOLOGIES I WORK WITH</p>

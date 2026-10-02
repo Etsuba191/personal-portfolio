@@ -58,14 +58,16 @@ const AdminExperience = () => {
     setSaving(true); setMessage(''); setError('')
     try {
       if (editingId) {
-        await updateAdminExperience(editingId, form)
+        const updated = await updateAdminExperience(editingId, form)
+        setItems((current) => current.map((item) => item.id === editingId ? updated : item))
+        reset()
         setMessage('Experience updated.')
       } else {
         const created = await createAdminExperience(form)
         setItems((current) => [...current, created])
+        reset()
         setMessage('Experience created.')
       }
-      reset()
     } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to save experience.') } finally { setSaving(false) }
   }
 
