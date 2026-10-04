@@ -1,4 +1,9 @@
-export const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api').replace(/\/$/, '')
+export const API_URL = (
+  import.meta.env.VITE_API_URL ??
+  (import.meta.env.PROD
+    ? 'https://personal-portfolio-backend-r6qk.onrender.com/api'
+    : 'http://localhost:4000/api')
+).replace(/\/$/, '')
 const REQUEST_TIMEOUT_MS = 12000
 
 export const apiRequest = async <T = unknown>(path: string, options: RequestInit = {}, credentials = false): Promise<T> => {
