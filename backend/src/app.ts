@@ -63,14 +63,15 @@ app.use(helmet({
 	crossOriginResourcePolicy: { policy: 'cross-origin' },
 }))
 app.use(cors({
-	origin: (origin, callback) => {
-		if (!origin || allowedOrigins.includes(origin)) {
-			callback(null, true)
-		} else {
-			callback(new Error('Not allowed by CORS'))
-		}
-	},
-	credentials: true,
+        origin: (origin, callback) => {
+                if (!origin || allowedOrigins.includes(origin)) {
+                        callback(null, true)
+                        return
+                }
+
+                callback(null, false)
+        },
+        credentials: true,
 }))
 app.use(express.json())
 app.use(logger)
